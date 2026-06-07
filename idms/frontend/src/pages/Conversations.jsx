@@ -44,8 +44,8 @@ export default function Conversations() {
         getDonors({ category: "Bridge Donor", limit: 100 }),
         getPatients({ limit: 1000 }),
       ]);
-      setDonors(Array.isArray(donorsRes.donors) ? donorsRes.donors : []);
-      setPatients(Array.isArray(patientsRes.patients) ? patientsRes.patients : []);
+      setDonors(Array.isArray(donorsRes) ? donorsRes : []);
+      setPatients(Array.isArray(patientsRes) ? patientsRes : []);
     } catch (err) {
       setError(err?.response?.data?.error || err?.response?.data?.detail || err.message || "Failed to load conversations");
     } finally {
@@ -111,7 +111,7 @@ export default function Conversations() {
     setConversationLoading(true);
     setSendError("");
     try {
-      const data = await getConversations(donorId, patientId);
+      const data = await getConversations(donorId, patientId, 'coordinator');
       setHistory(data.history || []);
       const lastStage = (data.history || []).at(-1)?.conversation_stage || "initial_outreach";
       setConversationStage(lastStage);
@@ -166,7 +166,7 @@ export default function Conversations() {
     setHistory((current) => [...current, userEntry]);
     setMessage("");
     try {
-      const result = await postChat(selectedDonor.user_id, selectedPatientId, text.trim());
+      const result = await postChat(selectedDonor.user_id, selectedPatientId, text.trim(), 'coordinator');
       setConversationStage(result.conversation_stage || conversationStage);
       setHistory((current) => [
         ...current,
@@ -269,8 +269,8 @@ export default function Conversations() {
                     <div key={`${item.timestamp}-${index}`} className={`bubble-row ${item.role}`}>
                       <div className={`bubble ${item.role === "assistant" ? "bubble-assistant" : "bubble-user"}`}>
                         <div className="bubble-meta">
-                          <Badge tone={item.role === "assistant" ? "danger" : "muted"}>
-                            {item.role === "assistant" ? "Priya" : "Donor"}
+                          <Badge tone={item.role === "assistant" ? "success" : "muted"}>
+                            {item.role === "assistant" ? "Donor" : "Coordinator"}
                           </Badge>
                           <small>{formatDateTime(item.timestamp)}</small>
                         </div>

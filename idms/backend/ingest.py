@@ -5,10 +5,33 @@ from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text, select, func, and_
+from neo4j import GraphDatabase
 import logging
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
 
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+try:
+    from models import Base, Donor, Patient, Bridge, EscalationPool
+except ModuleNotFoundError:
+    from backend.models import Base, Donor, Patient, Bridge, EscalationPool
+
+# Get database credentials from environment variables
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+POSTGRES_DB = os.getenv("POSTGRES_DB", "idms")
+POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
+
+NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
+
+DATABASE_URL = f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 
 
 def find_dataset():
@@ -54,6 +77,15 @@ def normalize_reliability_score(total_calls, donations_till_date):
     return score
 
 
+def sanitize_str(value):
+    if pd.isna(value) or value is None:
+        return None
+    val_str = str(value).strip()
+    if val_str.lower() in ('nan', 'none', 'null', ''):
+        return None
+    return val_str
+
+
 def parse_timestamp(value):
     """Safely parse timestamp"""
     if pd.isna(value) or value is None:
@@ -68,28 +100,6 @@ def parse_timestamp(value):
 
 async def ingest_data():
     """Main ingestion function"""
-    # Import here to avoid circular imports
-    from models import Base, Donor, Patient, Bridge, EscalationPool
-    
-    try:
-        from neo4j import GraphDatabase
-    except ImportError:
-        logger.warning("Neo4j driver not available")
-        GraphDatabase = None
-    
-    # Get database credentials from environment variables
-    POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
-    POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
-    POSTGRES_DB = os.getenv("POSTGRES_DB", "idms")
-    POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
-    POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
-    
-    NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-    NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
-    NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
-    
-    DATABASE_URL = f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-    
     logger.info("=" * 80)
     logger.info("IDMS DATA INGESTION STARTED")
     logger.info("=" * 80)
@@ -99,8 +109,6 @@ async def ingest_data():
         dataset_path = find_dataset()
         logger.info(f"Loading dataset from: {dataset_path}")
         df = pd.read_csv(dataset_path)
-        # Replace NaN values with None so they're inserted as NULL in the database
-        df = df.where(pd.notna(df), None)
         logger.info(f"Dataset loaded: {len(df)} rows, {len(df.columns)} columns")
         
         # Create async engine
@@ -151,15 +159,15 @@ async def ingest_data():
                     
                     patient = Patient(
                         patient_id=patient_id,
-                        blood_group=row.get('blood_group'),
-                        gender=row.get('gender'),
+                        blood_group=sanitize_str(row.get('blood_group')),
+                        gender=sanitize_str(row.get('gender')),
                         latitude=row.get('latitude') if pd.notna(row.get('latitude')) else None,
                         longitude=row.get('longitude') if pd.notna(row.get('longitude')) else None,
                         quantity_required=int(row.get('quantity_required', 1)) if pd.notna(row.get('quantity_required')) else 1,
                         frequency_in_days=int(frequency),
                         last_transfusion_date=last_transfusion,
                         expected_next_transfusion_date=expected_next,
-                        status=row.get('status', 'active'),
+                        status=sanitize_str(row.get('status', 'active')),
                         registration_date=parse_timestamp(row.get('registration_date')),
                     )
                     await session.merge(patient)
@@ -188,7 +196,14 @@ async def ingest_data():
                 donor_rows = df[df['role'] == role]
                 logger.info(f"Found {len(donor_rows)} {role} rows")
                 donors_by_category[category] = 0
-                
+
+                # Deduplicate by user_id: keep row with highest donations_till_date
+                if not donor_rows.empty:
+                    donor_rows = (
+                        donor_rows.sort_values('donations_till_date', ascending=False, na_position='last')
+                        .drop_duplicates(subset=['user_id'], keep='first')
+                    )
+
                 for _, row in donor_rows.iterrows():
                     try:
                         user_id = row.get('user_id')
@@ -202,6 +217,12 @@ async def ingest_data():
                         donations_till = int(donations_till) if pd.notna(donations_till) else 0
                         
                         normalized_score = normalize_reliability_score(total_calls, donations_till)
+
+                        # Recalculate calls_to_donations_ratio (calls per donation)
+                        if donations_till and donations_till > 0:
+                            calls_to_donations_ratio = float(total_calls) / float(max(1, donations_till))
+                        else:
+                            calls_to_donations_ratio = float(total_calls)
                         
                         # Set frequency_in_days for non-bridge donors to 0
                         frequency = row.get('frequency_in_days')
@@ -210,28 +231,42 @@ async def ingest_data():
                         else:
                             frequency = int(frequency) if pd.notna(frequency) and frequency > 0 else 0
                         
+                        # Recalculate next eligible date from last_donation_date + 90 days
+                        last_donation_dt = parse_timestamp(row.get('last_donation_date'))
+                        next_eligible_dt = None
+                        eligibility_status = row.get('eligibility_status')
+                        if last_donation_dt:
+                            next_eligible_dt = last_donation_dt + timedelta(days=90)
+                            eligibility_status = 'eligible' if next_eligible_dt <= datetime.utcnow() else 'not eligible'
+
+                        # Auto-set inactive trigger comment when donor marked not active
+                        inactive_comment = row.get('inactive_trigger_comment')
+                        user_active = row.get('user_donation_active_status')
+                        if user_active and str(user_active).lower() != 'active' and (inactive_comment is None or str(inactive_comment).strip() == ''):
+                            inactive_comment = 'Auto-marked inactive during ingestion'
+
                         donor = Donor(
                             user_id=user_id,
-                            blood_group=row.get('blood_group'),
-                            gender=row.get('gender'),
+                            blood_group=sanitize_str(row.get('blood_group')),
+                            gender=sanitize_str(row.get('gender')),
                             latitude=row.get('latitude') if pd.notna(row.get('latitude')) else None,
                             longitude=row.get('longitude') if pd.notna(row.get('longitude')) else None,
-                            last_donation_date=parse_timestamp(row.get('last_donation_date')),
-                            next_eligible_date=parse_timestamp(row.get('next_eligible_date')),
+                            last_donation_date=last_donation_dt,
+                            next_eligible_date=next_eligible_dt,
                             donations_till_date=donations_till,
-                            eligibility_status=row.get('eligibility_status'),
+                            eligibility_status=sanitize_str(eligibility_status),
                             total_calls=total_calls,
-                            calls_to_donations_ratio=row.get('calls_to_donations_ratio'),
+                            calls_to_donations_ratio=calls_to_donations_ratio,
                             normalized_reliability_score=normalized_score,
-                            user_donation_active_status=row.get('user_donation_active_status'),
-                            inactive_trigger_comment=row.get('inactive_trigger_comment'),
+                            user_donation_active_status=sanitize_str(row.get('user_donation_active_status')),
+                            inactive_trigger_comment=sanitize_str(inactive_comment),
                             registration_date=parse_timestamp(row.get('registration_date')),
                             last_contacted_date=parse_timestamp(row.get('last_contacted_date')),
-                            donor_type=row.get('donor_type'),
+                            donor_type=sanitize_str(row.get('donor_type')),
                             donor_category=category,
                             cycle_of_donations=int(row.get('cycle_of_donations')) if pd.notna(row.get('cycle_of_donations')) else None,
                             frequency_in_days=frequency,
-                            status=row.get('status'),
+                            status=sanitize_str(row.get('status')),
                             donated_earlier=bool(row.get('donated_earlier')) if pd.notna(row.get('donated_earlier')) else False,
                             role_status=bool(row.get('role_status')) if pd.notna(row.get('role_status')) else False,
                         )
@@ -278,6 +313,18 @@ async def ingest_data():
                             logger.warning(f"No patient found for bridge {bridge_id}, blood group {bridge_blood_group}")
                             continue
                         
+                        # Check if this bridge already exists (unique bridge_id + donor_id)
+                        exists_result = await session.execute(
+                            select(Bridge).where(
+                                and_(
+                                    Bridge.bridge_id == bridge_id,
+                                    Bridge.donor_id == donor_id
+                                )
+                            )
+                        )
+                        if exists_result.scalars().first():
+                            continue
+                        
                         bridge = Bridge(
                             bridge_id=bridge_id,
                             donor_id=donor_id,
@@ -285,9 +332,9 @@ async def ingest_data():
                             donations_till_date=int(row.get('donations_till_date')) if pd.notna(row.get('donations_till_date')) else None,
                             last_bridge_donation_date=parse_timestamp(row.get('last_bridge_donation_date')),
                             status_of_bridge=bool(row.get('status_of_bridge')) if pd.notna(row.get('status_of_bridge')) else False,
-                            role=row.get('role'),
+                            role=sanitize_str(row.get('role')),
                             role_status=bool(row.get('role_status')) if pd.notna(row.get('role_status')) else False,
-                            bridge_blood_group=bridge_blood_group,
+                            bridge_blood_group=sanitize_str(bridge_blood_group),
                             chain_position=chain_pos,
                         )
                         await session.merge(bridge)
@@ -313,8 +360,6 @@ async def ingest_data():
             
             for patient in patients:
                 try:
-                    added_donors = set()  # Track donors already added for this patient
-                    
                     # Stage 1: Bridge Donors with matching blood group
                     stage1_result = await session.execute(
                         select(Bridge).where(
@@ -327,20 +372,26 @@ async def ingest_data():
                     stage1_bridges = stage1_result.scalars().all()
                     
                     for bridge in stage1_bridges:
-                        try:
-                            if bridge.donor_id in added_donors:
-                                continue  # Skip if already added
-                            pool = EscalationPool(
-                                patient_id=patient.patient_id,
-                                donor_id=bridge.donor_id,
-                                pool_stage=1,
-                                blood_group=patient.blood_group,
+                        # Check if this pool entry already exists
+                        exists_result = await session.execute(
+                            select(EscalationPool).where(
+                                and_(
+                                    EscalationPool.patient_id == patient.patient_id,
+                                    EscalationPool.donor_id == bridge.donor_id
+                                )
                             )
-                            await session.merge(pool)
-                            added_donors.add(bridge.donor_id)
-                            escalation_stage_counts[1] += 1
-                        except Exception as e:
-                            pass  # Duplicate or other error
+                        )
+                        if exists_result.scalars().first():
+                            continue
+                        
+                        pool = EscalationPool(
+                            patient_id=patient.patient_id,
+                            donor_id=bridge.donor_id,
+                            pool_stage=1,
+                            blood_group=patient.blood_group,
+                        )
+                        await session.merge(pool)
+                        escalation_stage_counts[1] += 1
                     
                     # Stage 2: Emergency Donors with matching blood group and active status
                     stage2_result = await session.execute(
@@ -356,20 +407,26 @@ async def ingest_data():
                     stage2_donors = stage2_result.scalars().all()
                     
                     for donor in stage2_donors:
-                        try:
-                            if donor.user_id in added_donors:
-                                continue  # Skip if already added
-                            pool = EscalationPool(
-                                patient_id=patient.patient_id,
-                                donor_id=donor.user_id,
-                                pool_stage=2,
-                                blood_group=patient.blood_group,
+                        # Skip if already exists
+                        exists_result = await session.execute(
+                            select(EscalationPool).where(
+                                and_(
+                                    EscalationPool.patient_id == patient.patient_id,
+                                    EscalationPool.donor_id == donor.user_id
+                                )
                             )
-                            await session.merge(pool)
-                            added_donors.add(donor.user_id)
-                            escalation_stage_counts[2] += 1
-                        except Exception as e:
-                            pass  # Duplicate or other error
+                        )
+                        if exists_result.scalars().first():
+                            continue
+                            
+                        pool = EscalationPool(
+                            patient_id=patient.patient_id,
+                            donor_id=donor.user_id,
+                            pool_stage=2,
+                            blood_group=patient.blood_group,
+                        )
+                        await session.merge(pool)
+                        escalation_stage_counts[2] += 1
                     
                     # Stage 3: All remaining active donors with matching blood group
                     stage3_result = await session.execute(
@@ -383,20 +440,26 @@ async def ingest_data():
                     stage3_donors = stage3_result.scalars().all()
                     
                     for donor in stage3_donors:
-                        try:
-                            if donor.user_id in added_donors:
-                                continue  # Skip if already added
-                            pool = EscalationPool(
-                                patient_id=patient.patient_id,
-                                donor_id=donor.user_id,
-                                pool_stage=3,
-                                blood_group=patient.blood_group,
+                        # Skip if already exists
+                        exists_result = await session.execute(
+                            select(EscalationPool).where(
+                                and_(
+                                    EscalationPool.patient_id == patient.patient_id,
+                                    EscalationPool.donor_id == donor.user_id
+                                )
                             )
-                            await session.merge(pool)
-                            added_donors.add(donor.user_id)
-                            escalation_stage_counts[3] += 1
-                        except Exception as e:
-                            pass  # Duplicate or other error
+                        )
+                        if exists_result.scalars().first():
+                            continue
+                            
+                        pool = EscalationPool(
+                            patient_id=patient.patient_id,
+                            donor_id=donor.user_id,
+                            pool_stage=3,
+                            blood_group=patient.blood_group,
+                        )
+                        await session.merge(pool)
+                        escalation_stage_counts[3] += 1
                     
                 except Exception as e:
                     logger.warning(f"Failed to populate escalation pool for patient {patient.patient_id}: {str(e)}")
@@ -415,9 +478,6 @@ async def ingest_data():
         neo4j_edges_created = 0
         
         try:
-            if GraphDatabase is None:
-                raise ImportError("Neo4j driver not available")
-                
             driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
             
             async with async_session() as session:

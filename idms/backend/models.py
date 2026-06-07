@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Float, Integer, Boolean, DateTime, Text, ForeignKey, UniqueConstraint, Index
+from sqlalchemy import Column, String, Float, Integer, Boolean, DateTime, Text, JSON, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
@@ -59,6 +59,25 @@ class Patient(Base):
     __table_args__ = (
         Index("idx_patients_blood_group", "blood_group"),
         Index("idx_patients_status", "status"),
+    )
+
+
+class DonorPersonality(Base):
+    __tablename__ = "donor_personality"
+
+    donor_id = Column(String, ForeignKey("donors.user_id"), primary_key=True)
+    communication_style = Column(String, nullable=True)
+    motivation_type = Column(String, nullable=True)
+    response_rate = Column(Float, nullable=True)
+    avg_response_time_hours = Column(Float, nullable=True)
+    sentiment_history = Column(JSON, nullable=True, default=[])
+    preferred_contact_time = Column(String, nullable=True)
+    total_conversations = Column(Integer, default=0)
+    last_personality_update = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        Index("idx_donor_personality_donor", "donor_id"),
     )
 
 
@@ -186,3 +205,43 @@ class LearningLog(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     __table_args__ = (Index("idx_learning_log_patient", "patient_id"),)
+
+
+class DonationInterviewSession(Base):
+    __tablename__ = "donation_interview_sessions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    donor_id = Column(String, nullable=False)
+    patient_id = Column(String, nullable=False)
+    question_index = Column(Integer, default=0)
+    answers = Column(JSON, nullable=True, default={})
+    status = Column(String, default="in_progress")
+    started_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class DonationHistory(Base):
+    __tablename__ = "donation_history"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    donor_id = Column(String, nullable=False)
+    patient_id = Column(String, nullable=False)
+    blood_group = Column(String, nullable=True)
+    availability_date = Column(String, nullable=True)
+    location = Column(String, nullable=True)
+    pincode = Column(String, nullable=True)
+    contact_confirmed = Column(Boolean, nullable=True)
+    medical_eligibility_answers = Column(JSON, nullable=True)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    status = Column(String, default="pending")
+
+
+class DonorActivityLog(Base):
+    __tablename__ = "donor_activity_log"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    donor_id = Column(String, nullable=False)
+    action = Column(String, nullable=False)
+    details = Column(JSON, nullable=True)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+

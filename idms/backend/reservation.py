@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_async_session
 from eligibility import get_eligible_donors
-from models import Donor, EscalationLog, ReservationLog
+from models import Donor, EscalationLog, NotificationsLog, ReservationLog
 
 
 def _get_neo4j_driver():
@@ -125,6 +125,12 @@ async def confirm_reservation(
         if not transfusion_datetime:
             raise ValueError("Reservation does not contain a valid transfusion date")
 
+        # Enforce 90-day cooldown from donor.last_donation_date
+        if donor.last_donation_date:
+            days_since = (transfusion_datetime - donor.last_donation_date).days
+            if days_since is not None and days_since < 90:
+                raise ValueError("Donor cannot be confirmed: 90-day cooldown not satisfied")
+
         reservation.status = "completed"
         session.add(reservation)
 
@@ -132,7 +138,22 @@ async def confirm_reservation(
         donor.next_eligible_date = transfusion_datetime + timedelta(days=90)
         donor.last_donation_date = transfusion_datetime
         donor.donations_till_date = (donor.donations_till_date or 0) + 1
+        donor.cycle_of_donations = (donor.cycle_of_donations or 0) + 1
+        donor.normalized_reliability_score = min(
+            100.0,
+            max(0.0, (donor.normalized_reliability_score or 50.0) + 2.0)
+        )
         session.add(donor)
+
+        notification = NotificationsLog(
+            donor_id=donor.user_id,
+            patient_id=reservation.patient_id,
+            message=f"Thank you for confirming your donation for patient {reservation.patient_id}. Your next eligibility date is {donor.next_eligible_date.date()}.",
+            sent_at=datetime.utcnow(),
+            channel="system",
+            notification_type="donation_confirmed",
+        )
+        session.add(notification)
 
         escalation_entry = EscalationLog(
             patient_id=reservation.patient_id,

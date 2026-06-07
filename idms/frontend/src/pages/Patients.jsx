@@ -62,7 +62,7 @@ export default function Patients() {
     setError("");
     try {
       const [patientsRes, scheduleRes] = await Promise.all([getPatients({ limit: 1000 }), getScheduleStatus()]);
-      setPatients(Array.isArray(patientsRes.patients) ? patientsRes.patients : []);
+      setPatients(Array.isArray(patientsRes) ? patientsRes : []);
       setSchedule(Array.isArray(scheduleRes.active_patients) ? scheduleRes.active_patients : []);
     } catch (err) {
       setError(err?.response?.data?.error || err?.response?.data?.detail || err.message || "Failed to load patients");

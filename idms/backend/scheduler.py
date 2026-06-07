@@ -78,16 +78,7 @@ async def run_scheduler_scan() -> Dict[str, Any]:
             if stage is None:
                 continue
 
-            log_query = select(EscalationLog).where(
-                EscalationLog.patient_id == patient.patient_id,
-                EscalationLog.stage == stage,
-                func.date(EscalationLog.trigger_date) == today,
-            )
-            log_result = await session.execute(log_query)
-            existing_log = log_result.scalars().first()
-            if existing_log:
-                continue
-
+            # Do not perform side-effects here; Celery daily_scan is the authoritative trigger.
             donor_ids = await _get_pool_donor_ids(patient, stage, session)
             if not donor_ids:
                 continue
@@ -96,16 +87,7 @@ async def run_scheduler_scan() -> Dict[str, Any]:
             eligible_ids = [d["donor_id"] for d in eligible_donors if d["donor_id"] in donor_ids]
             ranked = await rank_donors(patient.patient_id, eligible_ids, session=session)
 
-            escalation_record = EscalationLog(
-                patient_id=patient.patient_id,
-                trigger_date=datetime.utcnow(),
-                stage=stage,
-                action_taken="auto_scheduled",
-                outcome="pending",
-            )
-            session.add(escalation_record)
-            await session.commit()
-
+            # Add to summary only — do not write logs or enqueue tasks here to avoid duplication.
             summary["patients_triggered"] += 1
             summary["by_stage"][str(stage)] += 1
             summary["triggered_patients"].append(

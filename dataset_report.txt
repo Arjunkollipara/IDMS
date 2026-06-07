@@ -1,0 +1,363 @@
+IDMS Dataset Report
+Source file: C:\Users\arjun\Desktop\AIisgood2\project\Dataset.csv
+Generated at: 2026-06-06 13:04:28
+
+================================================================================
+SECTION 1 - Basic Shape
+================================================================================
+  Total rows: 7033
+  Total columns: 31
+  Column names: user_id, bridge_id, role, role_status, bridge_status, blood_group, gender, latitude, longitude, bridge_gender, bridge_blood_group, quantity_required, last_transfusion_date, expected_next_transfusion_date, registration_date, donor_type, last_contacted_date, last_donation_date, next_eligible_date, donations_till_date, eligibility_status, cycle_of_donations, total_calls, frequency_in_days, status_of_bridge, status, donated_earlier, last_bridge_donation_date, calls_to_donations_ratio, user_donation_active_status, inactive_trigger_comment
+  Inferred data type for each column:
+    user_id: string
+    bridge_id: string
+    role: string
+    role_status: boolean
+    bridge_status: boolean
+    blood_group: string
+    gender: string
+    latitude: numeric
+    longitude: numeric
+    bridge_gender: string
+    bridge_blood_group: string
+    quantity_required: numeric
+    last_transfusion_date: datetime
+    expected_next_transfusion_date: datetime
+    registration_date: datetime
+    donor_type: string
+    last_contacted_date: datetime
+    last_donation_date: datetime
+    next_eligible_date: datetime
+    donations_till_date: numeric
+    eligibility_status: string
+    cycle_of_donations: numeric
+    total_calls: numeric
+    frequency_in_days: numeric
+    status_of_bridge: boolean
+    status: string
+    donated_earlier: boolean
+    last_bridge_donation_date: datetime
+    calls_to_donations_ratio: numeric
+    user_donation_active_status: string
+    inactive_trigger_comment: string
+
+================================================================================
+SECTION 2 - Role Analysis
+================================================================================
+  role:
+    'Guest': 2420
+    'Emergency Donor': 2385
+    'Bridge Donor': 2061
+    'Patient': 84
+    'Volunteer': 83
+  donor_type:
+    'Other': 2587
+    'One-Time Donor': 2385
+    'Regular Donor': 2061
+  role_status:
+    'true': 7033
+  status:
+    'active': 7033
+  user_donation_active_status:
+    'Active': 6351
+    'Inactive': 682
+
+================================================================================
+SECTION 3 - Bridge Analysis
+================================================================================
+  Total rows where bridge_id is NOT NULL: 786
+  Total rows where bridge_id is NULL: 6247
+  Total unique bridge_ids: 80
+  Donors per bridge_id (min): 3.0
+  Donors per bridge_id (max): 16.0
+  Donors per bridge_id (average): 7.9113924050632916
+  Donors per bridge_id (median): 7.0
+  Top 5 bridge_ids by donor count:
+    \xbead247f04eec8a04ec2c4b0b42ad0ea4c6dba620f5f42a31fa413774f789371: 16
+    \xbe1804d2eb562017ccdf94a8ac94e6ae642492f7f99bfedc91a51e1a0c2bedc7: 15
+    \x06aed1a0f55cb9fe4d0debfa68c0e78125a2f254a40ef6d8eab6c4c3ae49ce41: 15
+    \x3cc3e40a67590049987bce0c0186b6742e5fce4c9201e7e0bf1d460059d81cf4: 14
+    \x5b40cd608c1c8a55373ce97a5c58edba44d0edd8e68ee11df8b55b7ca9d34ec4: 13
+  Bridges with only 1 donor: 0
+  Bridges with 8 or more donors: 38
+
+================================================================================
+SECTION 4 - Blood Group Analysis
+================================================================================
+  blood_group:
+    'O Positive': 1963
+    'B Positive': 1481
+    'A Positive': 879
+    'AB Positive': 353
+    'Do not Know': 160
+    'O Negative': 120
+    'B Negative': 94
+    'A Negative': 53
+    'AB Negative': 35
+    'A1B Positive': 8
+    'A1 Positive': 5
+    'Bombay Blood Group': 2
+    'A2 Negative': 1
+    'A2 Positive': 1
+    'A2B Negative': 1
+    'A2B Positive': 1
+  bridge_blood_group:
+    'O Positive': 331
+    'B Positive': 285
+    'A Positive': 78
+    'AB Positive': 49
+    'O Negative': 20
+    'B Negative': 9
+    'AB Negative': 8
+    'A Negative': 6
+  Rows where blood_group mismatches bridge_blood_group: 4436
+
+================================================================================
+SECTION 5 - Date Field Analysis
+================================================================================
+  last_transfusion_date:
+    Non-null values: 786
+    Null values: 6247
+    Earliest date: 2025-06-16 00:00:00
+    Latest date: 2025-12-16 00:00:00
+  expected_next_transfusion_date:
+    Non-null values: 786
+    Null values: 6247
+    Earliest date: 2025-06-25 00:00:00
+    Latest date: 2025-12-31 00:00:00
+    Values in the past: 786
+    Values in the next 7 days: 0
+    Values in the next 30 days: 0
+  last_donation_date:
+    Non-null values: 1719
+    Null values: 5314
+    Earliest date: 2020-03-01 00:00:00
+    Latest date: 2029-09-30 00:00:00
+  next_eligible_date:
+    Non-null values: 1719
+    Null values: 5314
+    Earliest date: 2020-05-30 00:00:00
+    Latest date: 2029-12-29 00:00:00
+  last_bridge_donation_date:
+    Non-null values: 786
+    Null values: 6247
+    Earliest date: 2025-06-16 00:00:00
+    Latest date: 2025-12-16 00:00:00
+  registration_date:
+    Non-null values: 6994
+    Null values: 39
+    Earliest date: 2020-03-01 00:00:00
+    Latest date: 2025-08-18 16:45:32.751000
+  last_contacted_date:
+    Non-null values: 1887
+    Null values: 5146
+    Earliest date: 2020-09-07 00:00:00
+    Latest date: 2025-08-31 00:00:00
+
+================================================================================
+SECTION 6 - Numeric Field Analysis
+================================================================================
+  donations_till_date:
+    Min: 1.0
+    Max: 12.0
+    Mean: 1.496218731820826
+    Median: 1.0
+    Nulls: 5314
+    Zeros: 0
+  total_calls:
+    Min: 0.0
+    Max: 23.0
+    Mean: 0.9324612540878715
+    Median: 0.0
+    Nulls: 0
+    Zeros: 5146
+  frequency_in_days:
+    Min: 0.0
+    Max: 58.0
+    Mean: 2.7508886677093702
+    Median: 0.0
+    Nulls: 0
+    Zeros: 6247
+  calls_to_donations_ratio:
+    Min: 0.0
+    Max: 23.0
+    Mean: 1.8463408958696919
+    Median: 1.0
+    Nulls: 5314
+    Zeros: 736
+  quantity_required:
+    Min: 1.0
+    Max: 3.0
+    Mean: 1.4300254452926209
+    Median: 1.0
+    Nulls: 6247
+    Zeros: 0
+  cycle_of_donations:
+    Min: -45.0
+    Max: 1958.0
+    Mean: 23.90729418455851
+    Median: 0.0
+    Nulls: 0
+    Zeros: 5314
+
+================================================================================
+SECTION 7 - Location Analysis
+================================================================================
+  Rows where latitude is NOT NULL: 7009
+  Rows where longitude is NOT NULL: 7009
+  Rows where both are NULL: 24
+  Approximate city distribution:
+    Hyderabad: 5756
+    Mumbai: 96
+    Delhi: 3
+    Bangalore: 7
+    Other: 1147
+    NULL: 24
+
+================================================================================
+SECTION 8 - Donor Reliability Signals
+================================================================================
+  calls_to_donations_ratio buckets:
+    0.0: 736
+    0.01 to 0.3: 22
+    0.31 to 0.6: 42
+    0.61 to 0.9: 22
+    0.91 to 1.0: 242
+    NULL: 5314
+    > 1.0: 655
+  donated_earlier = true: 1719
+  donated_earlier = false: 0
+  donated_earlier = null: 5314
+  inactive_trigger_comment unique values:
+    'Not donated in last 1 year': 361
+    'Very limited activity despite multiple calls': 321
+
+================================================================================
+SECTION 9 - Data Quality Issues
+================================================================================
+  Columns with more than 50% null values: bridge_id, gender, bridge_gender, bridge_blood_group, quantity_required, last_transfusion_date, expected_next_transfusion_date, last_contacted_date, last_donation_date, next_eligible_date, donations_till_date, donated_earlier, last_bridge_donation_date, calls_to_donations_ratio, inactive_trigger_comment
+  Columns with more than 90% null values: inactive_trigger_comment
+  Any user_id duplicates: 1
+    \x1079924643678e27c41f3679cbd5767137d1f4b9b1c791bb1dc1e6b4558a0639: 48
+    \x59bb6efc104cda9e91435dbdf480b9f257c07b9e23d44d1da2f2cab46b187ada: 27
+    \x7767a061c5fbcb6cdfd56d57cd81bc8d78942302998961f3445eeab092306069: 4
+    \x4c8ed206aa7ef903ab81a0362679cb6354527a4912b98f3e2d2fef4d0fe19aa4: 3
+    \x98d4e2bcac47d7dc12377ffda9a1b42bd56e9ad8167b973af1f34dfc1e780b9b: 2
+    \x944923288d74873bf69841d4cb92762aacdd866a051a938da3450defc86db2ab: 2
+    \x96839d31b67ea8896fe1c6b742e041aa06b7949bf0217437c08a7e6ce09185a9: 2
+    \x706d118e1ba8097808776d7d9bd313762d9a7ed3eef0b8370a0357c9e629f033: 2
+    \xec8ce561ef6d85c3bdfdfb661d8b10f0d760433b18fb9906880f84593c58d488: 2
+    \xda59b685733a9dc12c5b8126d34246b748daa924bea7d03262f82ce5934bbfa7: 2
+    \xd6002c51753ccf7bf41f4575a859b0541a3a1c29a946f91acd72907c9647610b: 2
+    \xd56f4fb0a92714c3fadd311c970208ddea51802729b9d7affc738bf418781caa: 2
+    \x8997e1858cbf2a75b95b05aabe12e8286e9b70f5fda928ecfed567b46ef63c23: 2
+  bridge_id values that appear as both a donor and something else: 79
+    \xbead247f04eec8a04ec2c4b0b42ad0ea4c6dba620f5f42a31fa413774f789371: 18
+    \x06aed1a0f55cb9fe4d0debfa68c0e78125a2f254a40ef6d8eab6c4c3ae49ce41: 17
+    \xbe1804d2eb562017ccdf94a8ac94e6ae642492f7f99bfedc91a51e1a0c2bedc7: 17
+    \x3cc3e40a67590049987bce0c0186b6742e5fce4c9201e7e0bf1d460059d81cf4: 16
+    \x5b40cd608c1c8a55373ce97a5c58edba44d0edd8e68ee11df8b55b7ca9d34ec4: 15
+    \x9eb692b771dc21ec13f6696d05ceda1abc3d156378d51860fd0568803691bf6e: 15
+    \xdfee9734e69b7ab40f1cfda63b60f28a6e310f6e7a2104b199c9ee725dea45f3: 15
+    \x76d8e83a942b49eda6369df33d98a7c9929c48a646d30a9a54c12c43619cb12a: 14
+    \xaeac58a541b55f4d51022d3eb65aa7797830ff4611c27b6f22925a095b5ae67d: 14
+    \x1e2b3f8b9b563b505ba6a6e495090baec792243e25b6146661ba33e62fc522a8: 13
+    \x46293d7f29dc322583488ed0fc0e07735615534c57742e429dd64178a4fd3524: 13
+    \x6c60053e5abca7fe5b7b51217df9e448c562bcf92af2ef62f7f8de0b2a05a27e: 13
+    \xcfd3b49cffb67394b71e8fe2901532841063195663dc0093b643627ba99260d6: 13
+    \x5ba74cca548bddcc345d4d4e37236c3fed66ba66e57513fa8eabcd04053b215d: 12
+    \x82c5c6ee84e1574ad25795d9dd393c4dcd0f207d43eaa000b641286793613e5e: 12
+    \x94e95d4afc2023ce5d865fb22e2fb968af6f3c8f73bed318c7dc0ee5f7252ec3: 12
+    \xfa6d361886dca83fb0dc04e142a98e2ce8492d693afeeb0c052b2f9b8041899e: 12
+    \x1c3e8edad4d0ce73a09c5dc77720907276c8b55cd855dafa44b68de093be9ee5: 11
+    \x2304aba0d978142bf79c4b29924b4dc1435f1e685b217c43d19fa14f51b94e7c: 11
+    \x248ee4af68e6d8626014e5c00894971c7f44176ee975814430a51e77aac39b8d: 11
+    \x50354355bbde2ad4c6186f82e36677c5edac2fcd8f9245efa4872f74413778ea: 11
+    \x71609e2fbbc708120ce7bf14758168c4f637cf2a5912f809279a1a2ca6ba67cb: 11
+    \xcaf41d46b580c9895549ae6a74a0137cf9fdb4a07cad9f3dd6d64296465763cd: 11
+    \xf99f895bf85776d7cee7afc04f6fd0df7e1f48fc82af36ff60e82ed2a8cbea6a: 11
+    \x1a666455663e9d94c61530fcc2935522231ab430d77c71d52609b58e22163782: 10
+    \x2b77794dc6407da38cc2c5a43e0960633457aa6316efc77a26242990a1179299: 10
+    \x33b0377658837b85f827f04dc9202848b2f468a7bbdfcaa153a013b73d3d1665: 10
+    \x4925605126c0b14645b49b45d56967908f91318ffa192ecfa8f59bb369f6138f: 10
+    \x619c1531ff630da315544adbe8bb960d05108ee2c2680fd94f844373f3a49cd1: 10
+    \x691c1c7ad114fa4490731e2a5049e394345315f68a68b47e712481d5bd70c886: 10
+    \xa0fe2ec77d619c986fd21a5ba4781b5a9435b25702ee72169fcba0f9c2c49e62: 10
+    \xb02492a25f332ad1104164cd47fe0a2a6b9c2dd6120c58771757f44a4ea83ffc: 10
+    \xb0304990e89f7486df8dc2cf4d6c26f7cd576844b9e8cad7d0afd5b800d4cbb8: 10
+    \xc5508387db70ede8775cb79dd09e0c866718886ec3a15e53e3030dda5739ad07: 10
+    \xd34797a18e935edc0f922f4feaae888940286fcca0ed8af136ca53b47ac96646: 10
+    \xe3d1f69e159681bb6ed245df9c8a3a85883a796273287cb2bd0c3e77855e326c: 10
+    \xe6a8ba8d83878ecb089ad8e982b5b51844bc18dc6c71c484af0b16cab85205a0: 10
+    \xf56152aad95800bea25b6ca5b661a8bd846212a9f7d4574c89901a2550d167a1: 10
+    \x01c31192185c2d4ffc5e3b54abf4d04f30beecae2d42f2d2aeef57453ebb3afa: 9
+    \x4712d4867ba459516e73f3236f84d06de7ff97fa40b71930fc40b41246ef35f0: 9
+    \x66b89b8173f23fa87c1599b93cac3b3c9ef8e11bf9e20abb23dda333911b268a: 9
+    \x692aa6799d7d739a7d6158b13f54594eb9fcfe63a4e18beb4015cd5ad0a4e8fb: 9
+    \x71f88ac06d58ea4c01a8a1ddc669e52adefc3ccc6e567daa5992d6440e4fb9bf: 9
+    \x850ce92f9eb2d42049a15044a2c927a2ff8cc32f77c953c0848d531370f32f72: 9
+    \xaa80073aadb6c6ab3f9e71b0e7fa655c2a555a6bd72aff82f4a96819e51e5ecf: 9
+    \xb1078426929eedd920ae536df8a97ec942b41d30849074ce12bbbd164f6c262c: 9
+    \xb6e75769ce763d711bcd93a188c31bd467f51eb36145582c4e175be9c839ed2f: 9
+    \xbdbeeef5c80ce98cc2830c9937acccc0c14ff3ce0a70ef5b328a5d78cfabb7b4: 9
+    \xc76eeb0dcf3cb970d82b45cd0b4e97d8ee279a09093ffc3b53521efb0924d289: 9
+    \xc94c50d1b9ccbe4185e15db3a034c0b1a93946331d2393090fabfcc2446bff20: 9
+    \xca34a6f35319f4ebe29ba2a071aed65efc94b6ebf80abc8b9276d802728d5a6d: 9
+    \xe1b2f7a310b89053a6a861a91cab528d059c42055f4c4f20aca18c0236246ce0: 9
+    \xe47c3437ecd2a198731cac9be6484274b026c98ff1bff22ac4c8db6c6d0e58ce: 9
+    \xf62bb9103e2f1e48c1f7b428c1da50662d182f55fece880f58dec7a94cb2a9e2: 9
+    \x0c5c2377421d9c532a31fd75437dbca220af73986583a479a4d3f19dfe54f63a: 8
+    \x1d00365b6f8e776f4d2d5105b3718a77cf80162715b683a88225b2aecf527243: 8
+    \x503c6e88a39c3639f062de02e1e758bc3a4b95cba5706a6b7a010b6d56713a83: 8
+    \x54965c3dabb05f71e8a4eb7a6a1ec9349515d73d607afbaa51a34fcad94c3d53: 8
+    \x57c6af4c71b399215c9b3f083c5d068fe38e7625078c75a40cb36d9140943ecc: 8
+    \x5880268727d023a3f0ed45d5f45c59ad7b7c9c9fc4e1d3938bb757f388741241: 8
+    \x7e63b926fbca628fd4d2faf3ef3e7d1c0022de069ae972b9359fbcf05a530ef5: 8
+    \x80c2fbd9d66530c3b9c9a650efd1978a84ec8611877cc064c2f5fbe331c917fb: 8
+    \x94a3e23401d0c35f7be8fb63baecf2e7ffd2fb0d7d93075cbaea78113938ecb2: 8
+    \xaa7335e898c42628352cd6a405856976c13023c9e20246e3d141593793741b68: 8
+    \xb6eba1d5240d547f180644ca6491c9271e42c7350658cac665d73ff6b47a0026: 8
+    \xbc189b52b57674f5e9e046bedbf4b181812cb9d23ec3d6dce2a7ef9676cb1342: 8
+    \xef5dffdf8bfc41fd9058720b9e259ce272575c66f7c5fc61794309a4f3083ee9: 8
+    \xf42cd9407939023583f8768c6ae0522983cd0f10f84accd672185d6f23454a11: 8
+    \x20071c51486c01e591fb8e05fe69ef87dde6fe5f38cd7c974282148afa02a07b: 7
+    \x402f052fb90bb15c559f2c7af257606329b9be73b1f87a4435ac3a49b566e151: 7
+    \x430c80f699bc7c6bcb8b43d419665632dd4835876a1fb30ef9d76c9cdd469d0d: 7
+    \xc1ba9e55354efc7b97083a7ebc2bfe18d90172a48e6a1d82373012a709bef9fb: 7
+    \xf3734704e7e0d6af105bdc2aa41acae703d60c02fbb583c799456130f8a6797e: 7
+    \x84459b2efd4c68c3eb92b6b04b7182b8ec79751593aa3923ebbe8af1a3b1bec2: 6
+    \x89633d697e70c0c254e16b23798f90d24c6b160c58a419d32e9317bbb9c3ac0c: 6
+    \x99b47ba84657919b99ab742c4113bfb5f2df471b1b56786daa66d7d63d3de5cf: 6
+    \xbfb38d9242595597ad626a1bacee6f6b43afef970170794a492ddf4bf2d7e08b: 6
+    \xd1a3fccfdfbd3663604f5dd5c9958a9f9735a30723741c5c3478b0ba0291264a: 6
+    \xc45d639c4aa64d8367e6e24a162ae3ddec12ca89ebd162dbb6223ebb0ed6697d: 5
+  Rows where next_eligible_date is before last_donation_date: 1
+  Rows where expected_next_transfusion_date is before last_transfusion_date: 0
+
+================================================================================
+SECTION 10 - Sample Rows
+================================================================================
+  3 rows where bridge_id is NOT NULL:
+                                                           user_id                                                          bridge_id         role role_status bridge_status blood_group gender   latitude  longitude bridge_gender bridge_blood_group quantity_required last_transfusion_date expected_next_transfusion_date       registration_date    donor_type last_contacted_date last_donation_date next_eligible_date donations_till_date eligibility_status cycle_of_donations total_calls frequency_in_days status_of_bridge status donated_earlier last_bridge_donation_date calls_to_donations_ratio user_donation_active_status inactive_trigger_comment
+\x965f27106fa34fe7bfa8f39515aac89ef2c4305a90d746d4201de647931ddaea \x20071c51486c01e591fb8e05fe69ef87dde6fe5f38cd7c974282148afa02a07b Bridge Donor        true          true  O Positive   Male 17.3922792 78.4602749          Male         O Positive                 1            2025-08-02                     2025-08-23 2020-05-02 22:09:38.000 Regular Donor          2025-07-26         2025-07-28         2025-10-26                   3       not eligible                 90           3                21             true active            true                2025-08-02                     1.00                      Active                     <NA>
+\x86188ddc971278bfb520f8e45d81b5db44d2dff2ca91a0c8bc3fab3b1068110c \x20071c51486c01e591fb8e05fe69ef87dde6fe5f38cd7c974282148afa02a07b Bridge Donor        true          true  O Positive   Male 17.3922792 78.4602749          Male         O Positive                 1            2025-08-02                     2025-08-23 2020-04-12 00:00:00.000 Regular Donor          2025-08-17               <NA>               <NA>                <NA>           eligible                  0           9                21             true active            <NA>                2025-08-02                     <NA>                      Active                     <NA>
+\x53596c3ad3a132acddabd4d83338027a70b251546b52a30e2174e1b06e113e2a \x2b77794dc6407da38cc2c5a43e0960633457aa6316efc77a26242990a1179299 Bridge Donor        true          true  A Positive   Male 17.3922792 78.4602749          Male         A Positive                 1            2025-08-02                     2025-08-22 2020-04-12 00:00:00.000 Regular Donor          2025-08-18         2025-05-01         2025-07-30                   3           eligible                 90           2                20             true active            true                2025-08-02                     0.67                      Active                     <NA>
+
+  3 rows where bridge_id is NULL:
+                                                           user_id bridge_id            role role_status bridge_status blood_group gender   latitude  longitude bridge_gender bridge_blood_group quantity_required last_transfusion_date expected_next_transfusion_date       registration_date     donor_type last_contacted_date last_donation_date next_eligible_date donations_till_date eligibility_status cycle_of_donations total_calls frequency_in_days status_of_bridge status donated_earlier last_bridge_donation_date calls_to_donations_ratio user_donation_active_status                     inactive_trigger_comment
+\x27682386ac7702a7155dc39f85533066c003b37527689da0b4f6a450366f1ba4      <NA> Emergency Donor        true         false  A Positive   Male 17.3922792 78.4602749          <NA>               <NA>              <NA>                  <NA>                           <NA> 2020-04-18 10:27:00.000 One-Time Donor          2025-07-28         2025-08-17         2025-11-15                   9       not eligible                 90           3                 0            false active            true                      <NA>                     0.33                      Active                                         <NA>
+\x37af8f50150129395c834a0552d58bb42d4ac1f76f26f440c36ee21066010292      <NA> Emergency Donor        true         false  A Positive   Male 17.3922792 78.4602749          <NA>               <NA>              <NA>                  <NA>                           <NA> 2020-04-12 00:00:00.000 One-Time Donor          2025-07-28               <NA>               <NA>                <NA>       not eligible                  0           5                 0            false active            <NA>                      <NA>                     <NA>                      Active                                         <NA>
+\x5e56ef18aff88fc634043b1b15a96b20bc8c7d1f72703acaa9d35dc5864ee373      <NA> Emergency Donor        true         false  A Positive   Male 17.3922792 78.4602749          <NA>               <NA>              <NA>                  <NA>                           <NA> 2020-04-12 00:00:00.000 One-Time Donor          2025-07-26         2020-08-14         2020-11-12                   1       not eligible                 90          23                 0            false active            true                      <NA>                    23.00                    Inactive Very limited activity despite multiple calls
+
+  Row with the highest donations_till_date:
+                                                           user_id                                                          bridge_id         role role_status bridge_status blood_group gender   latitude  longitude bridge_gender bridge_blood_group quantity_required last_transfusion_date expected_next_transfusion_date       registration_date    donor_type last_contacted_date last_donation_date next_eligible_date donations_till_date eligibility_status cycle_of_donations total_calls frequency_in_days status_of_bridge status donated_earlier last_bridge_donation_date calls_to_donations_ratio user_donation_active_status inactive_trigger_comment
+\xe699ad931472889277be52ae7faa88d0b09612b1785ba9cb36b51f46cb4ee00f \x1e2b3f8b9b563b505ba6a6e495090baec792243e25b6146661ba33e62fc522a8 Bridge Donor        true          true  A Positive   Male 17.3922792 78.4602749        Female         A Positive                 2            2025-08-17                     2025-09-11 2020-09-07 18:47:51.000 Regular Donor          2025-06-08         2025-06-10         2025-09-08                  12       not eligible                 90           2                25             true active            true                2025-08-17                     0.17                      Active                     <NA>
+
+  Row with the highest calls_to_donations_ratio:
+                                                           user_id bridge_id            role role_status bridge_status blood_group gender   latitude  longitude bridge_gender bridge_blood_group quantity_required last_transfusion_date expected_next_transfusion_date       registration_date     donor_type last_contacted_date last_donation_date next_eligible_date donations_till_date eligibility_status cycle_of_donations total_calls frequency_in_days status_of_bridge status donated_earlier last_bridge_donation_date calls_to_donations_ratio user_donation_active_status                     inactive_trigger_comment
+\x5e56ef18aff88fc634043b1b15a96b20bc8c7d1f72703acaa9d35dc5864ee373      <NA> Emergency Donor        true         false  A Positive   Male 17.3922792 78.4602749          <NA>               <NA>              <NA>                  <NA>                           <NA> 2020-04-12 00:00:00.000 One-Time Donor          2025-07-26         2020-08-14         2020-11-12                   1       not eligible                 90          23                 0            false active            true                      <NA>                    23.00                    Inactive Very limited activity despite multiple calls
+
+================================================================================
+SUMMARY
+================================================================================
+This dataset looks like a large operational blood-donation and patient-support table with 7,033 rows, covering donors, bridge donors, emergency donors, patients, and chain relationships across 80 bridge IDs. It can support matching, prioritization, chain analysis, donor reliability scoring, and basic data-quality checks, but it cannot by itself prove medical eligibility, real-time availability, or the full context behind why a donor or patient was recorded without additional business rules and external validation.

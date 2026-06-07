@@ -5,7 +5,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_async_session
-from models import NotificationsLog
+from models import NotificationsLog, Donor
 
 
 async def send_sonar_ping(
@@ -65,13 +65,25 @@ async def process_sonar_response(
             raise ValueError(f"Notification {notification_id} not found")
 
         notification.response = response
-        notification.responded_at = datetime.utcnow()
+        responded_at = datetime.utcnow()
+        notification.responded_at = responded_at
         session.add(notification)
-        await session.commit()
+        await session.flush()
 
+        # If donor confirms in-city, update donor active status and last_contacted_date
         response_lower = response.lower()
         yes_keywords = ["yes", "y", "haan", "ha", "yep", "sure"]
         in_city = any(keyword in response_lower for keyword in yes_keywords)
+
+        if in_city and notification.donor_id:
+            donor_result = await session.execute(select(Donor).where(Donor.user_id == notification.donor_id))
+            donor = donor_result.scalars().first()
+            if donor:
+                donor.user_donation_active_status = 'Active'
+                donor.last_contacted_date = responded_at
+                session.add(donor)
+
+        await session.commit()
 
         return {
             "donor_id": notification.donor_id,

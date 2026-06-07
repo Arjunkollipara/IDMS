@@ -1,6 +1,5 @@
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.pool import NullPool
 from sqlalchemy import text
 from contextlib import asynccontextmanager
 import logging
@@ -21,7 +20,10 @@ DATABASE_URL = f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTG
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
-    poolclass=NullPool,
+    pool_size=5,
+    max_overflow=10,
+    pool_pre_ping=True,
+    pool_recycle=1800,
     connect_args={
         "timeout": 10,
         "command_timeout": 30,

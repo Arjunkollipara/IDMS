@@ -1,0 +1,44 @@
+.coordinator-notifications {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.coordinator-notifications h3 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #2b8aef;
+}
+
+.notification-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notification-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+  background-color: rgba(43, 138, 239, 0.08);
+}
+
+.notification-item strong {
+  font-weight: 600;
+  color: #333;
+}
+
+.notification-item p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #555;
+}

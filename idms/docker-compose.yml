@@ -39,6 +39,7 @@ services:
 
   backend:
     build: ./backend
+    env_file: .env
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
@@ -62,11 +63,13 @@ services:
         condition: service_healthy
       neo4j:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - idms_network
     volumes:
       - ./backend:/app
-      - ../Dataset.csv:/data/Dataset.csv:ro
+      - ..:/data:ro
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   redis:
@@ -94,14 +97,17 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       REDIS_URL: redis://redis:6379/0
     depends_on:
-      - postgres
-      - neo4j
-      - redis
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - idms_network
     volumes:
       - ./backend:/app
-      - ../Dataset.csv:/data/Dataset.csv
+      - ..:/data
 
   celery_beat:
     build:
@@ -116,7 +122,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       REDIS_URL: redis://redis:6379/0
     depends_on:
-      - redis
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - idms_network
     volumes:
